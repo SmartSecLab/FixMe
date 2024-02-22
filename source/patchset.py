@@ -121,7 +121,7 @@ def save_list_cols(df):
             # print(tabulate(df_part, headers='keys', tablefmt='psql'))
             # print(f'Table: {col} - {col_dfs[col].shape}')
             # Save dataframes to csv files
-            col_dfs[col].to_csv(utils.output_dir + f"{col}.csv", index=False)
+            # col_dfs[col].to_csv(utils.output_dir + f"{col}.csv", index=False)
         except Exception as exec:
             print(f"Error: {exec}")
             continue
