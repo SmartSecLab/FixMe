@@ -16,9 +16,6 @@ def map_rename(columns):
     return rename_mapping
 
 
-# json_file = 'cvelistV5-main/cves/2024/21xxx/CVE-2024-21309.json'
-
-
 def json2df(json_file):
     """Convert JSON data to a pandas DataFrame"""
     # Read JSON data from file
@@ -43,10 +40,7 @@ def merge_json_files(json_files):
     for json_file in json_files:
         try:
             df_json = json2df(json_file)
-            # dfs = [json2df(json_file) for json_file in json_files]
-            # print(f'Number of DataFrames: {len(dfs)}')
-            # try:
-            if "cveId" in list(df_json.columns):
+            if len(df_cve) > 0 and "cveId" in list(df_json.columns):
                 if df.empty:
                     df = df_json
                 else:
@@ -64,15 +58,13 @@ def merge_json_files(json_files):
 
                     df = pd.concat(
                         [df, df_json], ignore_index=True, sort=False)
-                # print('='*20)
-            # verbose how many files have been processed
+
             if len(df) % 500 == 0:
                 print(f"#files scanned: {len(df)}")
                 print("=" * 40)
 
         except Exception as exec:
-            print(f"Error: {exec}")
-            print(f"Error reading file: {json_file}")
+            print(f"Error: {exec} at file: {json_file}")
             continue
     print(f"Number of DataFrames: {len(df)}")
     return df

@@ -119,9 +119,11 @@ def save_list_cols(df):
         try:
             col_dfs[col] = normalize_list_column(df, column=col)
             # print(tabulate(df_part, headers='keys', tablefmt='psql'))
-            # print(f'Table: {col} - {col_dfs[col].shape}')
+            print(f'Table: {col} - {col_dfs[col].shape}')
             # Save dataframes to csv files
-            # col_dfs[col].to_csv(utils.output_dir + f"{col}.csv", index=False)
+            col_file = utils.output_dir + f"{col}.csv"
+            col_dfs[col].to_csv(col_file, index=False)
+            print(f'Saved to {col_file}\n')
         except Exception as exec:
             print(f"Error: {exec}")
             continue

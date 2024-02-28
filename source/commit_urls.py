@@ -27,19 +27,41 @@ def find_urls(json_files):
     if json_files:
         # print(f"JSON files found: {len(json_files)}")
         for json_file in json_files:
+            refs = []
             if os.path.isfile(json_file):
-                try:
-                    # with open(json_file, 'r') as f:
-                    df = pd.read_json(json_file)
-                    refs = df.containers.cna["references"]
+                # try:
+                df = pd.read_json(json_file)
+                if "containers" in df.columns:
+                    contr = df.containers
+                    if "cna" in contr:
+                        cna = df.containers.cna
+                        if "references" in cna.keys():
+                            refs = df.containers.cna['references']
+                            # print(f'{json_file} has refs type: \n{refs}')
+                        #     if "reference_data" in refs:
+                        #         refs = refs['reference_data']
+                        #         print(f'{json_file} has reference_data')
+                        #     # else:
+                        #     #     print(f'{json_file} does not have reference_data')
+                        # # else:
+                        # #     print(f'{json_file} does not have references')
+                    else:
+                        print(f'{json_file} does not have cna')
+                else:
+                    print(f'{json_file} does not have containers')
+
+                if refs:
                     urls = [ref["url"] for ref in refs if "url" in ref]
                     commit_urls = find_commit_urls(urls)
+                else:
+                    urls = []
+                    commit_urls = []
 
-                    if commit_urls:
-                        patch_links[json_file] = commit_urls
+                if commit_urls:
+                    patch_links[json_file] = commit_urls
 
-                except Exception as exec:
-                    print(f"Error reading JSON file {json_file}: {exec}")
+                # except Exception as exec:
+                #     print(f"Error reading JSON file {json_file}: {exec}")
 
     else:
         print("No JSON file found in the directory.")

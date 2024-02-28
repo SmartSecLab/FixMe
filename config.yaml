@@ -1,3 +1,4 @@
 # paths
-CVE_DIR: /Users/guru/research/FixMe/data/cvelistV5-main/cves/2024/24xxx/
+# CVE_DIR: /Users/guru/research/FixMe/data/cvelistV5-main/cves/2024/24xxx/
+CVE_DIR: "/Users/guru/research/FixMe/data/cvelistV5-main/cves/2013/1xxx/"
 DB_DIR: /Users/guru/research/FixMe/data/
