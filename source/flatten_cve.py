@@ -1,88 +1,160 @@
 import source.utility as utils
 import pandas as pd
 import json
-from pandas import json_normalize
-
+from pathlib import Path
+import pandas as pd
+import json
+from warnings import simplefilter
 
 import source.utility as utils
 import source.commit_urls as cve
 
 
+simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
+
+
 def map_rename(columns):
     """Create a renaming mapping dictionary"""
     rename_mapping = {}
-    for key in columns:
+    for key in columns.keys():
         rename_mapping[key] = key.split(".")[-1]
     return rename_mapping
+
+
+def extract_descriptions(descriptions):
+    """Extract the descriptions from the descriptions column"""
+    desc = []
+    if descriptions:
+        desc = [descriptions[i]["value"] for i in range(len(descriptions))]
+    return desc
+
+
+def extract_refs(refs_list):
+    """Extract the references from the references column"""
+    refs = []
+    if refs_list:
+        refs = [ref["url"] for ref in refs_list]
+    return refs
+
+
+def extract_cwe(problemTypes):
+    """Extract the CWE IDs from the problemTypes column"""
+    cwes = [
+        entry["cweId"]
+        for pt in problemTypes
+        for entry in pt.get("descriptions", [])
+        if "cweId" in entry
+    ]
+    return cwes if cwes else ["unknown"]
+
+
+def extract_capec(capec):
+    """Extract the CAPEC IDs from the capec column"""
+    capecs = []
+    if isinstance(capec, list):
+        capecs = [entry["capecId"] for entry in capec if "capecId" in entry]
+    elif isinstance(capec, dict) and "capecId" in capec:
+        capecs = [capec["capecId"]]
+    return capecs
+
+
+def extract_metrics(metrics):
+    """Iterate through the list and extract nested items"""
+    df = pd.DataFrame()
+    for item in metrics:
+        for parent_key, parent_value in item.items():
+            if isinstance(parent_value, dict):
+                parent_df = pd.DataFrame(parent_value, index=[0])
+                parent_df.columns = [
+                    f"{parent_key}_{col}" for col in parent_df.columns]
+                df = pd.concat([df, parent_df], axis=1)
+            else:
+                df[parent_key] = parent_value
+    return df
+
+
+def append_cve(df, df_cve):
+    """Fill the missing columns in the DataFrames"""
+    all_cols = list(set(list(df.columns) + list(df_cve.columns)))
+    # insert new columns with None values
+    for column in all_cols:
+        if column not in list(df.columns):
+            df[column] = None
+        if column not in list(df_cve.columns):
+            df_cve[column] = None
+
+    df = df.sort_index(axis=1)
+    df_cve = df_cve.sort_index(axis=1)
+
+    df = pd.concat([df, df_cve], ignore_index=True, sort=False)
+    return df
+
+
+def extract_cna(cvedict):
+    """Extract the CNA data from the cvedict"""
+    df_cna = pd.json_normalize(cvedict["containers"]["cna"])
+    # Apply transformations conditionally
+    transformations = [
+        ("references", extract_refs),
+        ("descriptions", extract_descriptions),
+        ("problemTypes", extract_cwe),
+        ("impacts", extract_capec),
+    ]
+
+    for col, func in transformations:
+        if col in df_cna.columns and df_cna[col].any():
+            df_cna[col] = df_cna[col].apply(func)
+        else:
+            df_cna[col] = None
+
+    # Handle metrics separately
+    if "metrics" in df_cna.columns and df_cna["metrics"].any():
+        df_metrics = extract_metrics(df_cna["metrics"][0])
+        df_cna = pd.concat([df_cna, df_metrics], axis=1)
+
+    df_cna.columns = df_cna.columns.map(lambda x: x.replace(".", "_"))
+    return df_cna
 
 
 def json2df(json_file):
     """Convert JSON data to a pandas DataFrame"""
     # Read JSON data from file
-    with open(json_file, "r") as f:
-        json_data = json.load(f)
-
-    df = json_normalize(json_data, max_level=5)
-    df = df.rename(columns=map_rename(df.columns))
-    return df
-
-
-# function to merge all json files into a single dataframe
+    # print(f"Processing: {json_file}")
+    df_cve = pd.DataFrame()
+    if Path(json_file).is_file():
+        with open(json_file, "r") as f:
+            cvedict = json.load(f)
+        df_cna = pd.json_normalize(cvedict["containers"]["cna"])
+        df_cna = extract_cna(cvedict)
+        df_meta = pd.json_normalize(cvedict["cveMetadata"])
+        # concatenate these two dataframes
+        df_cve = pd.concat([df_meta, df_cna], axis=1)
+    else:
+        print(f"File not found: {json_file}")
+    return pd.DataFrame(df_cve)
 
 
 def merge_json_files(json_files):
     """Merge all the JSON files into a single DataFrame"""
-    # totoal number of json files
     print("=" * 20 + "Merging JSON files" + "=" * 20)
     print(f"#JSON files to scan: {len(json_files)}")
     print("=" * 40)
     df = pd.DataFrame()
+
     for json_file in json_files:
-        try:
-            df_json = json2df(json_file)
-            if len(df_cve) > 0 and "cveId" in list(df_json.columns):
-                if df.empty:
-                    df = df_json
-                else:
-                    unique_cols = list(
-                        set(list(df.columns) + list(df_json.columns)))
-                    # insert new columns with None values
-                    for column in unique_cols:
-                        if column not in list(df.columns):
-                            df[column] = None
-                        if column not in list(df_json.columns):
-                            df_json[column] = None
+        df_cve = json2df(json_file)
+        if len(df_cve) > 0 and "cveId" in list(df_cve.columns):
+            if df.empty:
+                df = df_cve
+            else:
+                df = append_cve(df, df_cve)
 
-                    df = df.sort_index(axis=1)
-                    df_json = df_json.sort_index(axis=1)
+        if len(df) % 1000 == 0:
+            print(f"#files scanned so far: {len(df)} [shape: {df.shape}]")
+            print("=" * 40)
 
-                    df = pd.concat(
-                        [df, df_json], ignore_index=True, sort=False)
-
-            if len(df) % 500 == 0:
-                print(f"#files scanned: {len(df)}")
-                print("=" * 40)
-
-        except Exception as exec:
-            print(f"Error: {exec} at file: {json_file}")
-            continue
-    print(f"Number of DataFrames: {len(df)}")
+    df = df.dropna(axis=1, how="all")
     return df
-
-
-def extract_cwe(problemTypes):
-    """Extract the CWE IDs from the problemTypes column"""
-    cwes = []
-    if problemTypes:
-        items = [problemTypes[i]["descriptions"]
-                 for i in range(len(problemTypes))]
-        for item in items:
-            for entry in item:
-                if "cweId" in entry:
-                    cwes.append(entry["cweId"])
-    if not cwes:
-        cwes = ["unknown"]
-    return cwes
 
 
 def flatten_cve(cve_dir):
@@ -93,7 +165,7 @@ def flatten_cve(cve_dir):
 
     json_files = list(patch_links.keys())
     df = merge_json_files(json_files)
-    df["cwe"] = df["problemTypes"].apply(extract_cwe)
+    # df["cwe"] = df["problemTypes"].apply(extract_cwe)
 
     # remove duplicate columns
     cols = list(df.columns)

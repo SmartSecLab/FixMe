@@ -16,12 +16,14 @@ if __name__ == "__main__":
             "Repository table does not exist. ",
             "Please run collect_repos.py to collect repo URLs.",
         )
-        urls = ps.collect_repos().url
+        urls = ps.collect_repos().references
     else:
         # load repository table from sqlite3 database
         print("Loading URLs from database...")
-        urls = list(pd.read_sql_query(
-            "SELECT url FROM repository", utils.conn).url)
+        urls = list(
+            pd.read_sql_query("SELECT * FROM repository",
+                              utils.conn).references
+        )
     print(f"Found {len(urls)} URLs.")
 
     # collect hunks

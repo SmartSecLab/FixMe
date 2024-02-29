@@ -3,8 +3,8 @@
 
 
 import os
-import pandas as pd
 import glob
+import re
 
 
 def find_json_files(directory):
@@ -21,54 +21,29 @@ def find_commit_urls(urls):
 
 
 def find_urls(json_files):
-    """collect all the URLs from the CVE Json files"""
+    """collect all the URLs from the CVE Json files
+    this covers all versions of the CVE records"""
     patch_links = {}
-
     if json_files:
-        # print(f"JSON files found: {len(json_files)}")
         for json_file in json_files:
-            refs = []
+            urls = []
             if os.path.isfile(json_file):
-                # try:
-                df = pd.read_json(json_file)
-                if "containers" in df.columns:
-                    contr = df.containers
-                    if "cna" in contr:
-                        cna = df.containers.cna
-                        if "references" in cna.keys():
-                            refs = df.containers.cna['references']
-                            # print(f'{json_file} has refs type: \n{refs}')
-                        #     if "reference_data" in refs:
-                        #         refs = refs['reference_data']
-                        #         print(f'{json_file} has reference_data')
-                        #     # else:
-                        #     #     print(f'{json_file} does not have reference_data')
-                        # # else:
-                        # #     print(f'{json_file} does not have references')
-                    else:
-                        print(f'{json_file} does not have cna')
-                else:
-                    print(f'{json_file} does not have containers')
-
-                if refs:
-                    urls = [ref["url"] for ref in refs if "url" in ref]
-                    commit_urls = find_commit_urls(urls)
-                else:
-                    urls = []
-                    commit_urls = []
-
-                if commit_urls:
-                    patch_links[json_file] = commit_urls
-
-                # except Exception as exec:
-                #     print(f"Error reading JSON file {json_file}: {exec}")
-
+                with open(json_file, "r") as f:
+                    urls = re.findall(r'"url": "(.*?)"', f.read())
+            if urls:
+                patch_links[json_file] = find_commit_urls(urls)
     else:
         print("No JSON file found in the directory.")
+
+    patch_links = {k: v for k, v in patch_links.items() if v}
     return patch_links
 
 
 if __name__ == "__main__":
-    json_files = find_json_files("data/cvelistV5-main/cves/2024/24xxx/")
+    cve_dir = "/Users/guru/research/FixMe/data/cvelistV5/cves/2024/24xxx/"
+    json_files = find_json_files(cve_dir)
+    print(f"#JSON files: {len(json_files)}")
+    patch_links = find_urls(json_files)
+    print(f"#URLs: {len(patch_links)}")
     patch_links = find_urls(json_files)
     print(f"Number of URL links: {len(patch_links)}")

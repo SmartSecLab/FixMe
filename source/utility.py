@@ -1,12 +1,7 @@
 import os
-
-
 from pathlib import Path
-
-
 import sqlite3
 import yaml
-
 
 def load_config(config_file):
     with open(config_file, "r") as file:
@@ -34,8 +29,14 @@ if not os.path.isdir(CVE_DIR):
     print("Invalid directory path.")
     exit(2)
 
+db_file = os.path.join(output_dir, "FixMe.db")
+
+if config['FRESH_MINE']:
+    print("Cleaning the database directory")
+    os.remove(db_file)
+
 # Connect to SQLite database
-conn = sqlite3.connect(output_dir + "Fixme.db")
+conn = sqlite3.connect(db_file)
 cur = conn.cursor()
 print("Connected to SQLite")
 
