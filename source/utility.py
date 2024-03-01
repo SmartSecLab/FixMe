@@ -21,6 +21,8 @@ config = load_config("config.yaml")
 
 CVE_DIR = config["CVE_DIR"]
 output_dir = config["DB_DIR"]
+repo_url = "https://github.com/CVEProject/cvelistV5.git"
+
 
 Path("figure").mkdir(parents=True, exist_ok=True)
 Path(output_dir).mkdir(parents=True, exist_ok=True)

@@ -1,4 +1,4 @@
 # paths
 CVE_DIR: "/Users/guru/research/FixMe/data/cvelistV5/cves/2024"
 DB_DIR: /Users/guru/research/FixMe/data/
-FRESH_MINE: true
+FRESH_MINE: false
