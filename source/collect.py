@@ -5,7 +5,7 @@ import source.repository as ps
 from pathlib import Path
 
 # customs
-import source.utility as util
+from source.utility import util
 import source.refs as ref
 import source.cve as cve
 
@@ -44,14 +44,14 @@ def get_urls_from_db(conn):
 
 
 if __name__ == "__main__":
-    repo_url = util.config["REPO_URL"]
-    db_dir = util.config["DB_DIR"]
-    repo_name = Path(repo_url).stem  # get the repo name only
 
     # STEP 1: collect modified/new files
-    cve_repo_path = db_dir + repo_name
-    mod_files = ref.clone_or_pull(repo_url, db_dir + repo_name)
-    mod_cves = ref.get_mod_cves(mod_files, db_dir)
+    # eg. /Users/guru/research/FixMe/data/cvelistV5
+    cve_repo_path = util.config["DATA_DIR"] + \
+        Path(util.config["REPO_URL"]).stem
+
+    mod_files = ref.clone_or_pull(util.config["REPO_URL"], cve_repo_path)
+    mod_cves = ref.get_mod_cves(mod_files, util.config["DATA_DIR"])
 
     # STEP 2: collect commit URLs
     mod_urls = ref.find_urls(mod_cves)
@@ -64,6 +64,6 @@ if __name__ == "__main__":
     print(f"New URLs to be extracted: {len(new_urls)}")
 
     # STEP 3: flatten the CVE JSON files
-    df_cve = cve.flatten_cve(util.CVE_DIR)
+    df_cve = cve.flatten_cve(util.config["DATA_DIR"])
 
     # STEP 4: load the URLs from the database or collect them

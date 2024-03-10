@@ -4,7 +4,7 @@ from pathlib import Path
 
 from warnings import simplefilter
 
-import source.utility as utils
+from source.utility import util
 import source.refs as ref
 
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
@@ -157,17 +157,16 @@ def merge_json_files(json_files):
 def flatten_cve(cve_dir):
     """Flatten the CVE JSON files and save the records to a SQLite database"""
     print("\n" + "=" * 20 + "Flatten CVEs" + "=" * 20)
-    incre_update = utils.config["INCREMENTAL_UPDATE"]
-
+    incre_update = util.config["INCREMENTAL_UPDATE"]
     print(f'Incremental update: {incre_update}')
 
-    if utils.table_exists("cve") and incre_update is True:
+    if util.table_exists("cve") and incre_update is True:
         print("Updating the existing records...")
         # get all the CVE IDs from the cve table in the database
-        cve_ids = utils.get_col_values('cve', 'cveId')
+        cve_ids = util.get_col_values('cve', 'cveId')
         print(f"Number of CVE IDs already stored: {len(cve_ids)}")
 
-        json_files = ref.get_mod_cves(cve_dir, utils.output_dir)
+        json_files = ref.get_mod_cves(cve_dir, cve_dir)
         print(f"#modified files: {len(json_files)}")
     else:
         json_files = ref.find_json_files(cve_dir)
@@ -193,13 +192,13 @@ def flatten_cve(cve_dir):
     # Save the dataframe to a sqlite database
     # Convert the type of the columns to string
     # otherwise, the sqlite3 will raise an error
-    if utils.config['INCREMENTAL_UPDATE'] is False:
-        df.astype(str).to_sql("cve", utils.conn,
+    if util.config['INCREMENTAL_UPDATE'] is False:
+        df.astype(str).to_sql("cve", util.conn,
                               if_exists="replace", index=False)
         print("Saved CVE records to SQLite!")
         print("#records: ", df.shape)
     else:
-        df.astype(str).to_sql("cve", utils.conn,
+        df.astype(str).to_sql("cve", util.conn,
                               if_exists="append", index=False)
         print("Appended CVE records to SQLite!")
         print("#records added: ", df.shape)
