@@ -1,39 +1,69 @@
-# collect complete data
 import pandas as pd
 import git
 import source.hunks as hunk
-import source.patchset as ps
+import source.repository as ps
 from pathlib import Path
 
 # customs
-import source.utility as utils
-import source.commit_urls as cu
 import source.utility as util
+import source.refs as ref
+import source.cve as cve
 
-if __name__ == "__main__":
-    # collect commit URLs
-    # Call the clone_or_pull function with the repo URL and path
-    cve_repo_path = util.output_dir + Path(util.repo_url).stem
-    modified_files = cu.clone_or_pull(util.repo_url, cve_repo_path)
 
-    modified_cve_files = cu.get_modified_cve_files(modified_files, util.output_dir)
-    print(modified_cve_files)
-
+def load_urls():
+    """Load the URLs from the database or collect them"""
     # check if repository table exists
-    if not utils.table_exists("repository"):
-        print(
-            "Repository table does not exist. ",
-            "Please run collect_repos.py to collect repo URLs.",
-        )
-        urls = ps.collect_repos().references
+    urls = []
+    if not util.table_exists("repository"):
+        print("Repository table does not exist.")
+        # urls = repo.collect_repos().references
     else:
         # load repository table from sqlite3 database
         print("Loading URLs from database...")
         urls = list(
             pd.read_sql_query("SELECT * FROM repository",
-                              utils.conn).references
+                              util.conn).references
         )
-    print(f"Found {len(urls)} URLs.")
+    print(f"#URLs from the database: {len(urls)}")
 
     # collect hunks
     hunk.collect_repo_hunks(urls)
+
+
+def get_urls_from_db(conn):
+    """Get the references from the database"""
+    # check if cve table exists
+    urls = []
+    if not util.table_exists("cve"):
+        print("CVE table does not exist.")
+    else:
+        urls = pd.read_sql_query("SELECT * FROM cve;", conn).references
+        urls = list(urls.apply(eval).explode())
+    print(f"#References from the database: {len(urls)}")
+    return urls
+
+
+if __name__ == "__main__":
+    repo_url = util.config["REPO_URL"]
+    db_dir = util.config["DB_DIR"]
+    repo_name = Path(repo_url).stem  # get the repo name only
+
+    # STEP 1: collect modified/new files
+    cve_repo_path = db_dir + repo_name
+    mod_files = ref.clone_or_pull(repo_url, db_dir + repo_name)
+    mod_cves = ref.get_mod_cves(mod_files, db_dir)
+
+    # STEP 2: collect commit URLs
+    mod_urls = ref.find_urls(mod_cves)
+
+    # STEP 3: get URLs from the database
+    urls_from_db = get_urls_from_db(util.conn)
+
+    # STEP 4: compare the URLs
+    new_urls = [url for url in mod_urls if url not in urls_from_db]
+    print(f"New URLs to be extracted: {len(new_urls)}")
+
+    # STEP 3: flatten the CVE JSON files
+    df_cve = cve.flatten_cve(util.CVE_DIR)
+
+    # STEP 4: load the URLs from the database or collect them

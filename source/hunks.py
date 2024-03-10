@@ -3,12 +3,8 @@
 import source.utility as utils
 import pandas as pd
 
-
-import pandas as pd
-
-
 import source.utility as utils
-import source.patchset as ps
+import source.repository as repo
 
 
 def parse_before_after_code(hunk):
@@ -91,7 +87,7 @@ def collect_repo_hunks(urls):
 
     for url in urls:
         try:
-            patch = ps.get_patch_from_url(url)
+            patch = repo.get_patch_from_url(url)
             patch_meta, patch_hunks = parse_patchset(patch)
 
             df_hunk = pd.DataFrame(patch_hunks)

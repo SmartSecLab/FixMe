@@ -1,6 +1,5 @@
 # Parsing git patch from commit $hash.diff$
-
-import source.utility as utils
+#
 import urllib.request
 from unidiff import PatchSet
 import pandas as pd
@@ -8,7 +7,7 @@ from urllib.parse import urlparse
 
 # customs
 import source.utility as utils
-import source.flatten_cve as cve
+import source.cve as cve
 
 
 def get_patch_from_url(url):
@@ -78,7 +77,7 @@ def parse_commit_urls(cveIds, urls):
         # Remove duplicates based on the cveId and hash (same output)
         df = df.drop_duplicates(
             subset=["cveId", "hash"]).reset_index(drop=True)
-        print(f"shape of the commit data: {df.shape}")
+        print(f"commit data shape: {df.shape}")
     return df
 
 

@@ -1,14 +1,11 @@
-import source.utility as utils
 import pandas as pd
 import json
 from pathlib import Path
-import pandas as pd
-import json
+
 from warnings import simplefilter
 
 import source.utility as utils
-import source.commit_urls as cve
-
+import source.refs as ref
 
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
@@ -33,7 +30,7 @@ def extract_refs(refs_list):
     """Extract the references from the references column"""
     refs = []
     if refs_list:
-        refs = [ref["url"] for ref in refs_list]
+        refs = [refer["url"] for refer in refs_list]
     return refs
 
 
@@ -159,9 +156,23 @@ def merge_json_files(json_files):
 
 def flatten_cve(cve_dir):
     """Flatten the CVE JSON files and save the records to a SQLite database"""
-    json_files = cve.find_json_files(cve_dir)
-    patch_links = cve.find_urls(json_files)
-    print(f"Number of URL links: {len(patch_links)}")
+    print("\n" + "=" * 20 + "Flatten CVEs" + "=" * 20)
+    incre_update = utils.config["INCREMENTAL_UPDATE"]
+
+    print(f'Incremental update: {incre_update}')
+
+    if utils.table_exists("cve") and incre_update is True:
+        print("Updating the existing records...")
+        # get all the CVE IDs from the cve table in the database
+        cve_ids = utils.get_col_values('cve', 'cveId')
+        print(f"Number of CVE IDs already stored: {len(cve_ids)}")
+
+        json_files = ref.get_mod_cves(cve_dir, utils.output_dir)
+        print(f"#modified files: {len(json_files)}")
+    else:
+        json_files = ref.find_json_files(cve_dir)
+
+    patch_links = ref.find_urls(json_files)
 
     json_files = list(patch_links.keys())
     df = merge_json_files(json_files)
@@ -182,14 +193,17 @@ def flatten_cve(cve_dir):
     # Save the dataframe to a sqlite database
     # Convert the type of the columns to string
     # otherwise, the sqlite3 will raise an error
-    df.astype(str).to_sql("cve", utils.conn, if_exists="replace", index=False)
-    # df.to_csv(output_dir + 'cve.csv', index=False)
-    print("Saved flatten_CVE records to SQLite database")
-    print("#records: ", df.shape)
+    if utils.config['INCREMENTAL_UPDATE'] is False:
+        df.astype(str).to_sql("cve", utils.conn,
+                              if_exists="replace", index=False)
+        print("Saved CVE records to SQLite!")
+        print("#records: ", df.shape)
+    else:
+        df.astype(str).to_sql("cve", utils.conn,
+                              if_exists="append", index=False)
+        print("Appended CVE records to SQLite!")
+        print("#records added: ", df.shape)
+
+    print('#CVEs:', len(df))
     print("=" * 40)
     return df
-
-
-if __name__ == "__main__":
-    df = flatten_cve(utils.CVE_DIR)
-    print(df.head())

@@ -36,11 +36,13 @@ def find_urls(json_files):
         print("No JSON file found in the directory.")
 
     patch_links = {k: v for k, v in patch_links.items() if v}
+    print("#URL links:", len(patch_links))
     return patch_links
+
 
 def clone_or_pull(repo_url, repo_path):
     """Clone the repo if it doesn't exist, or pull if it does."""
-    modified_files = []
+    mod_files = []
     print(f"Cloning or pulling {repo_url} to {repo_path}")
     if os.path.exists(repo_path):
         # repo exists, perform a git pull
@@ -53,7 +55,7 @@ def clone_or_pull(repo_url, repo_path):
             print("Git pull successful")
             # Compare current commit with the latest one after pull
             for item in repo.head.commit.diff(current_commit):
-                modified_files.append(item.a_path)
+                mod_files.append(item.a_path)
         except git.exc.GitCommandError as e:
             print("Error occurred during git pull:", e)
     else:
@@ -63,26 +65,20 @@ def clone_or_pull(repo_url, repo_path):
             print("Git clone successful")
         except git.exc.GitCommandError as e:
             print("Error occurred during git clone:", e)
-    return modified_files
+    return mod_files
 
 
-def get_modified_cve_files(modified_files, data_dir):
+def get_mod_cves(mod_files, data_dir):
     """Find the modified CVE JSON files after a git pull"""
-    if modified_files:
-        print(f"Modified files after git pull: {modified_files}")
-        modified_cve_files = [Path(data_dir, 'cvelistV5', file) for file in modified_files if file.endswith(".json") and "CVE" in file]
-        print("Modified files related to CVE:", modified_cve_files)
+    print("\n" + "=" * 50)
+    if mod_files:
+        print(f"Modified files after git pull: {mod_files}")
+        mod_cves = [Path(data_dir, 'cvelistV5', file)
+                    for file in mod_files if file.endswith(".json") and "CVE" in file]
+        print("Modified files related to CVE:", mod_cves)
     else:
         print("No modified files found")
-        modified_cve_files = []
-    return modified_cve_files
-
-
-if __name__ == "__main__":
-    cve_dir = "/Users/guru/research/FixMe/data/cvelistV5/cves/2024/24xxx/"
-    json_files = find_json_files(cve_dir)
-    print(f"#JSON files: {len(json_files)}")
-    patch_links = find_urls(json_files)
-    print(f"#URLs: {len(patch_links)}")
-    patch_links = find_urls(json_files)
-    print(f"Number of URL links: {len(patch_links)}")
+        mod_cves = []
+    print('#modified/new CVEs:', len(mod_cves))
+    print("=" * 50 + "\n")
+    return mod_cves

@@ -1,4 +1,7 @@
 # paths
 CVE_DIR: "/Users/guru/research/FixMe/data/cvelistV5/cves/2024"
+REPO_URL: https://github.com/CVEProject/cvelistV5.git
 DB_DIR: /Users/guru/research/FixMe/data/
-FRESH_MINE: false
+DB_FILE: /Users/guru/research/FixMe/data/FixMe.db
+FRESH_MINE: true
+INCREMENTAL_UPDATE: true

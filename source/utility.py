@@ -3,6 +3,7 @@ from pathlib import Path
 import sqlite3
 import yaml
 
+
 def load_config(config_file):
     with open(config_file, "r") as file:
         config = yaml.safe_load(file)
@@ -11,27 +12,31 @@ def load_config(config_file):
 
 def table_exists(table_name):
     """Check if a table exists in the SQLite database"""
-    cur.execute(
-        f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"
-    )
-    return cur.fetchone() is not None
+    sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"
+    cur.execute(sql)
+    result = cur.fetchone()
+    return result if result else False
+
+
+def get_col_values(table, column):
+    """Get all the CVE IDs from the cve table"""
+    cur.execute("SELECT " + column + " FROM " + table)
+    result = cur.fetchall()
+    return result if result else False
 
 
 config = load_config("config.yaml")
-
 CVE_DIR = config["CVE_DIR"]
-output_dir = config["DB_DIR"]
-repo_url = "https://github.com/CVEProject/cvelistV5.git"
 
 
 Path("figure").mkdir(parents=True, exist_ok=True)
-Path(output_dir).mkdir(parents=True, exist_ok=True)
+Path(config["DB_DIR"]).mkdir(parents=True, exist_ok=True)
 
 if not os.path.isdir(CVE_DIR):
     print("Invalid directory path.")
     exit(2)
 
-db_file = os.path.join(output_dir, "FixMe.db")
+db_file = os.path.join(config["DB_DIR"], "FixMe.db")
 
 if config['FRESH_MINE']:
     print("Cleaning the database directory")
