@@ -72,19 +72,16 @@ def extract_metrics(metrics):
 
 def append_cve(df, df_cve):
     """Fill the missing columns in the DataFrames"""
-    all_cols = list(set(list(df.columns) + list(df_cve.columns)))
-    # insert new columns with None values
-    for column in all_cols:
-        if column not in list(df.columns):
-            df[column] = None
-        if column not in list(df_cve.columns):
-            df_cve[column] = None
+    # Get all columns from both DataFrames
+    all_cols = set(df.columns).union(df_cve.columns)
 
-    df = df.sort_index(axis=1)
-    df_cve = df_cve.sort_index(axis=1)
+    # Ignore 'x_legacy' columns
+    all_cols = [col for col in all_cols if 'x_legacy' not in col]
 
-    df = pd.concat([df, df_cve], ignore_index=True, sort=False)
-    return df
+    # Filter columns
+    df_cve = df_cve.reindex(columns=all_cols, fill_value=None)
+
+    return pd.concat([df, df_cve], ignore_index=True, sort=False)
 
 
 def extract_cna(cvedict):
@@ -142,7 +139,8 @@ def merge_json_files(json_files):
         df_cve = json2df(json_file)
         if len(df_cve) > 0 and "cveId" in list(df_cve.columns):
             if df.empty:
-                df = df_cve
+                df = df_cve[[
+                    col for col in df_cve.columns if 'x_legacy' not in col]]
             else:
                 df = append_cve(df, df_cve)
 

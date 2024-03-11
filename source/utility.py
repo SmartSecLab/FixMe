@@ -4,17 +4,20 @@ import sqlite3
 import yaml
 
 
-class DatabaseManager:
+class UtilityManager:
     def __init__(self, config_file):
         self.config = self.load_config(config_file)
         self.repo_name = Path(self.config["REPO_URL"]).stem
+
         Path("figure").mkdir(parents=True, exist_ok=True)
         Path(self.config["DATA_DIR"]).mkdir(parents=True, exist_ok=True)
-        self.db_file = self.config['DB_FILE']
 
+        self.db_file = self.config['DB_FILE']
         if self.config['FRESH_MINE']:
-            print("Cleaning the database directory!")
+            print(f"Cleaning the database: {self.db_file}")
             os.remove(self.db_file)
+        else:
+            print(f"Using the existing database: {self.db_file}")
 
         self.conn = sqlite3.connect(self.db_file)
         self.cur = self.conn.cursor()
@@ -28,7 +31,8 @@ class DatabaseManager:
 
     def table_exists(self, table_name):
         """Check if a table exists in the SQLite database"""
-        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'"
+        sql = f"SELECT name FROM sqlite_master WHERE type='table'" \
+            f"AND name='{table_name}'"
         self.cur.execute(sql)
         result = self.cur.fetchone()
         return result if result else False
@@ -87,6 +91,4 @@ class DatabaseManager:
         return language_mapping.get(extension, "Unknown")
 
 
-# Example usage:
-util = DatabaseManager("config.yaml")
-print(util.table_exists("cve"))
+util = UtilityManager("config.yaml")
