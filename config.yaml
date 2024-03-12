@@ -2,5 +2,5 @@
 REPO_URL: https://github.com/CVEProject/cvelistV5.git
 DATA_DIR: /Users/guru/research/FixMe/data/
 DB_FILE: /Users/guru/research/FixMe/data/FixMe.db
-FRESH_MINE: false
+FRESH_MINE: false # removes existing database
 INCREMENTAL_UPDATE: true

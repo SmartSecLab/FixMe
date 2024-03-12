@@ -152,30 +152,33 @@ def merge_json_files(json_files):
     return df
 
 
-def flatten_cve(cve_dir):
-    """Flatten the CVE JSON files and save the records to a SQLite database"""
-    print("\n" + "=" * 20 + "Flatten CVEs" + "=" * 20)
-    incre_update = util.config["INCREMENTAL_UPDATE"]
-    print(f'Incremental update: {incre_update}')
+def get_table_shape(table_name):
 
-    if util.table_exists("cve") and incre_update is True:
-        print("Updating the existing records...")
-        # get all the CVE IDs from the cve table in the database
-        cve_ids = util.get_col_values('cve', 'cveId')
-        print(f"Number of CVE IDs already stored: {len(cve_ids)}")
+    # Execute a query to count the number of rows
+    util.cur.execute(f"SELECT COUNT(*) FROM {table_name}")
+    num_rows = util.cur.fetchone()[0]
 
-        json_files = ref.get_mod_cves(cve_dir, cve_dir)
-        print(f"#modified files: {len(json_files)}")
+    util.cur.execute(f"PRAGMA table_info({table_name})")
+    columns = util.cur.fetchall()
+    column_names = [column[1] for column in columns]
+    return (num_rows, len(column_names))
+
+
+def filter_cves_to_update(cve_ids):
+    # remove the these CVEs from the the database table of cve records
+    if cve_ids:
+        print(f"Removing {len(cve_ids)} records from the table...")
+        util.cur.execute(
+            f"DELETE FROM cve WHERE cveId IN ({', '.join(['?']*len(cve_ids))})", cve_ids)
+        util.conn.commit()
     else:
-        json_files = ref.find_json_files(cve_dir)
+        print("No matching records to filter CVEs.\n")
 
-    patch_links = ref.find_urls(json_files)
 
-    json_files = list(patch_links.keys())
-    df = merge_json_files(json_files)
-    # df["cwe"] = df["problemTypes"].apply(extract_cwe)
-
+def save_cve(df):
+    """Save the CVE records to a SQLite database"""
     # remove duplicate columns
+    print("\n" + "=" * 20 + "Saving CVE" + "=" * 20)
     cols = list(df.columns)
     duplicate_cols = [col for col in cols if cols.count(col) > 1]
     dedup_cols = list(set(duplicate_cols))
@@ -190,17 +193,73 @@ def flatten_cve(cve_dir):
     # Save the dataframe to a sqlite database
     # Convert the type of the columns to string
     # otherwise, the sqlite3 will raise an error
-    if util.config['INCREMENTAL_UPDATE'] is False:
-        df.astype(str).to_sql("cve", util.conn,
-                              if_exists="replace", index=False)
-        print("Saved CVE records to SQLite!")
-        print("#records: ", df.shape)
-    else:
+    if util.table_exists("cve") and util.config["INCREMENTAL_UPDATE"] is True:
+        print(f'Shape of the existing table: {get_table_shape("cve")}')
+
+        # find recorded CVEs in the database
+        cve_ids = util.get_col_values('cve', 'cveId')
+
+        # find intersection of the CVEs in the database and the new CVEs
+        same_cves = list(
+            set(list(df['cveId'])).intersection(set(cve_ids)))
+        print(f"#CVEs to be updated: {same_cves}")
+
+        # remove the existing records before appending
+        filter_cves_to_update(same_cves)
+
         df.astype(str).to_sql("cve", util.conn,
                               if_exists="append", index=False)
-        print("Appended CVE records to SQLite!")
-        print("#records added: ", df.shape)
+    else:
+        df.astype(str).to_sql("cve", util.conn,
+                              if_exists="replace", index=False)
 
-    print('#CVEs:', len(df))
-    print("=" * 40)
+    print("Saved/appended CVE records to SQLite!")
+    print("#CVE records: ", df.shape)
+
+    print(f'Shape of CVE records[full]: {get_table_shape("cve")}')
+    print("=" * 50)
+    return df
+
+
+def get_cols(table_name):
+    # Connect to the SQLite database
+    cursor = util.conn.cursor()
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    columns = cursor.fetchall()
+    cols = [col[1] for col in columns]
+    return cols
+
+
+def flatten_cve(cve_dir):
+    """Flatten the CVE JSON files and save the records to a SQLite database"""
+    print("\n" + "=" * 20 + "Flatten CVEs" + "=" * 20)
+    # eg. /Users/guru/research/FixMe/data/cvelistV5
+    cve_repo_local = cve_dir + \
+        Path(util.config["REPO_URL"]).stem
+
+    mod_files = ref.clone_or_pull(util.config["REPO_URL"], cve_repo_local)
+
+    if util.table_exists("cve") and util.config["INCREMENTAL_UPDATE"] is True:
+        print("Updating the existing records [incremental]...")
+
+        json_files = ref.get_mod_cves(mod_files, cve_dir)
+
+        print(f"#URL links to process: {len(json_files)}")
+
+    else:
+        print("Collecting all records...")
+        json_files = ref.find_json_files(cve_dir)
+
+    df = pd.DataFrame()
+
+    if json_files:
+        patch_links = ref.find_urls(json_files)
+
+        cve_files = list(patch_links.keys())
+        print(f"#Patch links to process: {len(cve_files)}\n")
+
+        if cve_files:
+            df = merge_json_files(cve_files)
+            df = save_cve(df)
+
     return df

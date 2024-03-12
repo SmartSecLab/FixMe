@@ -42,8 +42,9 @@ def find_urls(json_files):
 
 def clone_or_pull(repo_url, repo_path):
     """Clone the repo if it doesn't exist, or pull if it does."""
+    print("=" * 50)
     mod_files = []
-    print(f"Cloning or pulling {repo_url} to {repo_path}")
+    print(f"\nCloning or pulling {repo_url} to {repo_path}")
     if os.path.exists(repo_path):
         # repo exists, perform a git pull
         try:
@@ -65,20 +66,22 @@ def clone_or_pull(repo_url, repo_path):
             print("Git clone successful")
         except git.exc.GitCommandError as e:
             print("Error occurred during git clone:", e)
+    print("=" * 50)
     return mod_files
 
 
 def get_mod_cves(mod_files, data_dir):
     """Find the modified CVE JSON files after a git pull"""
-    print("\n" + "=" * 50)
+    mod_cves = []
     if mod_files:
-        print(f"Modified files after git pull: {mod_files}")
+        # print(f"Modified files after git pull: {mod_files}")
         mod_cves = [Path(data_dir, 'cvelistV5', file)
                     for file in mod_files if file.endswith(".json") and "CVE" in file]
-        print("Modified files related to CVE:", mod_cves)
-    else:
-        print("No modified files found")
-        mod_cves = []
-    print('#modified/new CVEs:', len(mod_cves))
-    print("=" * 50 + "\n")
+        print(f"Modified/New CVEs: \n{mod_cves}")
+        print(f"#modified CVEs: {len(mod_cves)}")
+
+        # TODO: remove these lines
+        with open(data_dir + "mod_cves.txt", "w") as f:
+            f.write("\n".join([str(cve) for cve in mod_cves]))
+
     return mod_cves

@@ -37,7 +37,7 @@ def get_urls_from_db(conn):
     if not util.table_exists("cve"):
         print("CVE table does not exist.")
     else:
-        urls = pd.read_sql_query("SELECT * FROM cve;", conn).references
+        urls = pd.read_sql_query("SELECT `references` FROM cve;", conn)
         urls = list(urls.apply(eval).explode())
     print(f"#References from the database: {len(urls)}")
     return urls
@@ -46,22 +46,23 @@ def get_urls_from_db(conn):
 if __name__ == "__main__":
 
     # STEP 1: collect modified/new files
-    # eg. /Users/guru/research/FixMe/data/cvelistV5
-    cve_repo_path = util.config["DATA_DIR"] + \
-        Path(util.config["REPO_URL"]).stem
+    # # eg. /Users/guru/research/FixMe/data/cvelistV5
+    # cve_repo_local = util.config["DATA_DIR"] + \
+    #     Path(util.config["REPO_URL"]).stem
 
-    mod_files = ref.clone_or_pull(util.config["REPO_URL"], cve_repo_path)
-    mod_cves = ref.get_mod_cves(mod_files, util.config["DATA_DIR"])
+    # mod_files = ref.clone_or_pull(util.config["REPO_URL"], cve_repo_local)
+    # mod_jsons = ref.get_mod_cves(mod_files, util.config["DATA_DIR"])
 
     # STEP 2: collect commit URLs
-    mod_urls = ref.find_urls(mod_cves)
+    # if mod_urls:
 
     # STEP 3: get URLs from the database
-    urls_from_db = get_urls_from_db(util.conn)
+    # urls_from_db = get_urls_from_db(util.conn)
 
     # STEP 4: compare the URLs
-    new_urls = [url for url in mod_urls if url not in urls_from_db]
-    print(f"New URLs to be extracted: {len(new_urls)}")
+    # new_urls = [url for url in mod_urls if url not in urls_from_db]
+    # print(f"#URLs to be extracted: {len(mod_urls)}")
+    # print(f"URLs to be extracted: {mod_urls}")
 
     # STEP 3: flatten the CVE JSON files
     df_cve = cve.flatten_cve(util.config["DATA_DIR"])

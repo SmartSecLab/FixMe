@@ -41,6 +41,7 @@ class UtilityManager:
         """Get all the values from a specific column in a table"""
         self.cur.execute("SELECT " + column + " FROM " + table)
         result = self.cur.fetchall()
+        result = [x[0] for x in result]
         return result if result else False
 
     def close_connection(self):
