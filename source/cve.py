@@ -152,18 +152,6 @@ def merge_json_files(json_files):
     return df
 
 
-def get_table_shape(table_name):
-
-    # Execute a query to count the number of rows
-    util.cur.execute(f"SELECT COUNT(*) FROM {table_name}")
-    num_rows = util.cur.fetchone()[0]
-
-    util.cur.execute(f"PRAGMA table_info({table_name})")
-    columns = util.cur.fetchall()
-    column_names = [column[1] for column in columns]
-    return (num_rows, len(column_names))
-
-
 def filter_cves_to_update(cve_ids):
     # remove the these CVEs from the the database table of cve records
     if cve_ids:
@@ -194,7 +182,7 @@ def save_cve(df):
     # Convert the type of the columns to string
     # otherwise, the sqlite3 will raise an error
     if util.table_exists("cve") and util.config["INCREMENTAL_UPDATE"] is True:
-        print(f'Shape of the existing table: {get_table_shape("cve")}')
+        print(f'Shape of the existing table: {util.get_table_shape("cve")}')
 
         # find recorded CVEs in the database
         cve_ids = util.get_col_values('cve', 'cveId')
@@ -216,7 +204,7 @@ def save_cve(df):
     print("Saved/appended CVE records to SQLite!")
     print("#CVE records: ", df.shape)
 
-    print(f'Shape of CVE records[full]: {get_table_shape("cve")}')
+    print(f'Shape of CVE records[full]: {util.get_table_shape("cve")}')
     print("=" * 50)
     return df
 
@@ -261,5 +249,4 @@ def flatten_cve(cve_dir):
         if cve_files:
             df = merge_json_files(cve_files)
             df = save_cve(df)
-
     return df

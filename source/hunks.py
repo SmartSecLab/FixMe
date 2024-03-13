@@ -3,7 +3,7 @@
 import source.utility as utils
 import pandas as pd
 
-import source.utility as utils
+from source.utility import util
 import source.repository as repo
 
 
@@ -102,24 +102,12 @@ def collect_repo_hunks(urls):
                 [df_repo_patch, df_file], ignore_index=True)
             df_repo_hunks = pd.concat(
                 [df_repo_hunks, df_hunk], ignore_index=True)
-        except Exception as exec:
-            print(f"Error: {exec}")
+        except Exception as exe:
+            print(f"Error: {exe}")
             continue
 
-    # Save the DataFrames to sqlite3 database
-    df_repo_patch.astype(str).to_sql(
-        "patch_collection", utils.conn, if_exists="replace", index=False
-    )
-    df_repo_hunks.astype(str).to_sql(
-        "hunk_collection", utils.conn, if_exists="replace", index=False
-    )
-    print("=" * 50)
-    print("Patches and hunks saved to sqlite3 database")
-    # show shapes
-    print(f"Patches: {df_repo_patch.shape}")
-    print(f"Hunks: {df_repo_hunks.shape}")
-    print("=" * 50)
-    return df_repo_patch, df_repo_hunks
+    util.save_table(df_repo_hunks, "hunk_collection")
+    util.save_table(df_repo_patch, "patch_collection")
 
 
 if __name__ == "__main__":

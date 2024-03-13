@@ -6,7 +6,7 @@ import pandas as pd
 from urllib.parse import urlparse
 
 # customs
-import source.utility as utils
+from source.utility import util
 import source.cve as cve
 
 
@@ -55,12 +55,10 @@ def split_url(url):
     return (vcs, repo, hash)
 
 
-def parse_commit_urls(cveIds, urls):
+def parse_commit_urls(df):
     """Parse the version control URLs"""
     df = pd.DataFrame()
-    if len(urls) > 0:
-        df = pd.DataFrame({"cveId": cveIds, "references": urls})
-
+    if len(df) > 0:
         if isinstance(df.references[0], list):
             # Explode the list of references
             df = df.explode("references").reset_index(drop=True)
@@ -78,19 +76,6 @@ def parse_commit_urls(cveIds, urls):
         df = df.drop_duplicates(
             subset=["cveId", "hash"]).reset_index(drop=True)
         print(f"commit data shape: {df.shape}")
-    return df
-
-
-def collect_repos():
-    """Collect repositories from the DataFrame"""
-    df_cves = cve.flatten_cve(utils.CVE_DIR)
-    df = parse_commit_urls(df_cves.cveId, df_cves.references)
-
-    # Save to sqlite3 database
-    df.astype(str).to_sql("repository", utils.conn,
-                          if_exists="replace", index=False)
-    print("Commit information is saved to sqlite3 database.")
-    print(f"Commits: {df.shape}")
     return df
 
 

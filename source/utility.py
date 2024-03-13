@@ -44,6 +44,34 @@ class UtilityManager:
         result = [x[0] for x in result]
         return result if result else False
 
+    def get_table_shape(self, table_name):
+        """Execute a query to show shape"""
+        util.cur.execute(f"SELECT COUNT(*) FROM {table_name}")
+        num_rows = util.cur.fetchone()[0]
+
+        util.cur.execute(f"PRAGMA table_info({table_name})")
+        columns = util.cur.fetchall()
+        column_names = [column[1] for column in columns]
+        return (num_rows, len(column_names))
+
+    def save_table(self, df, table_name="patch_collection"):
+        """Save the DataFrames to sqlite3 database"""
+        print("=" * 50)
+        print(f"Saving {table_name}...")
+        if not df.empty:
+            if util.table_exists(table_name) and util.config["INCREMENTAL_UPDATE"] is True:
+                print(f'{table_name} shape: {util.get_table_shape(table_name)}')
+                df.astype(str).to_sql(table_name, util.conn,
+                                      if_exists="append", index=False)
+            else:
+                print(f"Creating {table_name} table...")
+                df.astype(str).to_sql(table_name, util.conn,
+                                      if_exists="replace", index=False)
+            print(f"Patches/Hunks: {df.shape}")
+        else:
+            print(f"No data to save in {table_name}.")
+        print("=" * 50)
+
     def close_connection(self):
         """Close the SQLite connection"""
         self.conn.close()
