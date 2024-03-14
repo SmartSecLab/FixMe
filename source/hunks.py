@@ -90,7 +90,7 @@ def collect_repo_hunks(urls):
 
     for i, url in enumerate(urls):
         # verbose progress
-        if i % 5000 == 0:
+        if i % 1000 == 0:
             print(f'Parsing patches from {i+1}/{len(urls)} repositories...')
         try:
             patch = repo.get_patch_from_url(url)

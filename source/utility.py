@@ -116,8 +116,54 @@ class UtilityManager:
             "vue": "Vuejs",  # JavaScript framework
             "scss": "SASS",  # CSS preprocessor
             "sass": "SASS",
+            "txt": "txt",  # Text file
+            "md": "Markdown",  # Markup language
+            "json": "JSON",  # Data interchange format
+            "xml": "XML",  # Markup language
+            "yml": "YAML",  # Markup language
+            "yaml": "YAML",
+            "ini": "INI",  # Configuration file format
+            "cfg": "INI",
+            "conf": "INI",
+            "properties": "INI",
+            "toml": "TOML",  # Markup language
         }
         return language_mapping.get(extension, "Unknown")
 
 
 util = UtilityManager("config.yaml")
+
+
+# def create_table(conn, table_name):
+#     cursor = conn.cursor()
+#     cursor.execute(f'''
+#         CREATE TABLE IF NOT EXISTS {table_name} (
+#             id INTEGER PRIMARY KEY,
+#             col1 TEXT,
+#             col2 TEXT,
+#             col3 TEXT -- Add more columns as needed
+#         )
+#     ''')
+#     conn.commit()
+
+# def update_or_insert_row(conn, table_name, data):
+#     """ Update the row if the ID exists, otherwise insert a new row """
+#     cursor = conn.cursor()
+
+#     # Check if the ID exists in the table
+#     cursor.execute(f"SELECT EXISTS(SELECT 1 FROM {table_name} WHERE id = ?)", (data['id'],))
+#     exists = cursor.fetchone()[0]
+
+#     if exists:
+#         # Update the row
+#         update_query = f"UPDATE {table_name} SET "
+#         update_query += ', '.join([f"{key} = ?" for key in data.keys() if key != 'id'])
+#         update_query += " WHERE id = ?"
+
+#         cursor.execute(update_query, tuple(data[key] for key in data.keys() if key != 'id') + (data['id'],))
+#     else:
+#         # Insert a new row
+#         insert_query = f"INSERT INTO {table_name} ({', '.join(data.keys())}) VALUES ({', '.join(['?']*len(data))})"
+#         cursor.execute(insert_query, tuple(data.values()))
+
+#     conn.commit()
