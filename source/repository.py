@@ -4,6 +4,7 @@ import urllib.request
 from unidiff import PatchSet
 import pandas as pd
 from urllib.parse import urlparse
+from tabulate import tabulate
 
 # customs
 from source.utility import util
@@ -57,25 +58,25 @@ def split_url(url):
 
 def parse_commit_urls(df):
     """Parse the version control URLs"""
-    df = pd.DataFrame()
     if len(df) > 0:
-        if isinstance(df.references[0], list):
-            # Explode the list of references
-            df = df.explode("references").reset_index(drop=True)
-            print(f"Length of the references after exploding: {len(df)}")
-            df["vcs"], df["repo"], df["hash"] = zip(
-                *df.references.apply(split_url))
-    else:
-        print("No references found in the CVE data.")
+        # if isinstance(df.references[0], list):
+        print(f'Repository URL samples: \n{tabulate(df.head())}')
 
-    if df.empty:
-        print("No data found.")
-    else:
+        print(f"Shape of repository after exploding: {df.shape}")
+        df["vcs"], df["repo"], df["hash"] = zip(
+            *df.references.apply(split_url))
+
+    # on the exploded dataframe
+    if len(df) > 0:
+        print(f'Columns: {df.columns}')
         df = df.dropna(subset=["hash"])
         # Remove duplicates based on the cveId and hash (same output)
         df = df.drop_duplicates(
             subset=["cveId", "hash"]).reset_index(drop=True)
         print(f"commit data shape: {df.shape}")
+    else:
+        print("No references found in the CVE data.")
+
     return df
 
 

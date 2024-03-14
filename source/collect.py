@@ -31,21 +31,26 @@ def load_urls():
 def get_urls_from_db(df):
     """Get the references and CVE IDs from the database"""
     # Check if cve table exists
-    if not util.table_exists("cve"):
-        print("No CVE record in the database!")
-        return pd.DataFrame()
-    else:
+    print("="*50)
+    if util.table_exists("cve"):
         if util.table_exists("repository") and util.config["INCREMENTAL_UPDATE"] is True:
             print("Updating repositry records [incremental]...")
+            if not df.empty:
+                df['references'] = df.references.explode().reset_index(drop=True)
+            else:
+                print("No references found in new data.")
         else:
             print("Loading references from database...")
             df = pd.read_sql_query(
                 "SELECT `cveId`, `references` FROM cve;", util.conn)
+
             if not df.empty:
-                df = df.references.apply(eval).explode()
-                print(f"#References from the database: {len(df)}")
+                df['references'] = df.references.apply(
+                    eval).explode().reset_index(drop=True)
             else:
                 print("No references found in the database.")
+    print(f"#References from database(shape): {df.shape}")
+    print("="*50)
     return df
 
 

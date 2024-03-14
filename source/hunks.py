@@ -103,7 +103,7 @@ def collect_repo_hunks(urls):
             df_repo_hunks = pd.concat(
                 [df_repo_hunks, df_hunk], ignore_index=True)
         except Exception as exe:
-            print(f"Error: {exe}")
+            print(f"Error: {exe} for URL: {url}")
             continue
 
     util.save_table(df_repo_hunks, "hunk_collection")
