@@ -67,7 +67,7 @@ class UtilityManager:
                 print(f"Creating {table_name} table...")
                 df.astype(str).to_sql(table_name, util.conn,
                                       if_exists="replace", index=False)
-            print(f"Patches/Hunks: {df.shape}")
+            print(f"Shape of {table_name}: {df.shape}")
         else:
             print(f"No data to save in {table_name}.")
         print("=" * 50)

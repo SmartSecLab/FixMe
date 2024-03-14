@@ -48,6 +48,7 @@ def on_each_patch_file(patched_file):
             "target_length": hunk.target_length,
             "section_header": hunk.section_header,
             "hunk_length": len(hunk),
+            "programming_language": util.get_language_from_ext(patched_file.path)
         }
         # Append the hunk data to the patch_hunks list
         hunks.append(hunk_data)
@@ -69,6 +70,8 @@ def parse_patchset(patch):
             if not attr.startswith("__"):
                 attr_value = getattr(patched_file, attr)
                 file_attrs[attr] = attr_value
+                pl = util.get_language_from_ext(patched_file.path)
+                file_attrs["programming_language"] = pl
 
         patch_meta[patched_file.path] = file_attrs
         # Loop over each hunk in the patched file
@@ -85,7 +88,10 @@ def collect_repo_hunks(urls):
     df_repo_patch = pd.DataFrame()
     df_repo_hunks = pd.DataFrame()
 
-    for url in urls:
+    for i, url in enumerate(urls):
+        # verbose progress
+        if i % 5000 == 0:
+            print(f'Parsing patches from {i+1}/{len(urls)} repositories...')
         try:
             patch = repo.get_patch_from_url(url)
             patch_meta, patch_hunks = parse_patchset(patch)
