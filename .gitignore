@@ -1,3 +1,9 @@
+# Custom project-level ignores
+docs
+data/FixMe/
+FixMe.code-workspace
+semantic.ipynb
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
