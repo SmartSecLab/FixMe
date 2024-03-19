@@ -1,5 +1,7 @@
 # Parsing git patch from commit $hash.diff$
 #
+import re
+import requests
 import urllib.request
 from unidiff import PatchSet
 import pandas as pd
@@ -9,6 +11,20 @@ from tabulate import tabulate
 # customs
 from source.utility import util
 import source.cve as cve
+
+
+def get_commit_message(patch_url):
+    """Extract the subject line from a GitHub patch URL."""
+    try:
+        response = requests.get(patch_url + ".patch")
+        response.raise_for_status()
+        patch_content = response.text
+        subject_match = re.search(
+            r'^Subject: (.+)$', patch_content, re.MULTILINE)
+        return subject_match.group(1)
+
+    except requests.exceptions.RequestException:
+        return "unknown"
 
 
 def get_patch_from_url(url):
@@ -60,7 +76,7 @@ def parse_commit_urls(df):
     """Parse the version control URLs"""
     if len(df) > 0:
         # if isinstance(df.references[0], list):
-        print(f'Repository URL samples: \n{tabulate(df.head())}')
+        # print(f'Repository URL samples: \n{tabulate(df.head())}')
 
         print(f"Shape of repository after exploding: {df.shape}")
         df["vcs"], df["repo"], df["hash"] = zip(

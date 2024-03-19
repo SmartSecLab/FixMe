@@ -33,7 +33,7 @@ def get_urls_from_db(df):
                 print("No references found in the database.")
     print(f"#References from database(shape): {df.shape}")
     print("="*50)
-    return df
+    return df[["cveId", "references"]] if not df.empty else df
 
 
 if __name__ == "__main__":

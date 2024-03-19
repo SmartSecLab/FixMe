@@ -7,21 +7,21 @@ from source.utility import util
 import source.repository as repo
 
 
-def parse_before_after_code(hunk):
+def parse_before_code_after(hunk):
     """Parse the before and after code from a hunk"""
-    before_code = []
-    after_code = []
+    code_before = []
+    code_after = []
     for line in hunk:
         if line.is_removed or line.is_context:
             # This line is part of the before code
-            before_code.append(str(line)[1:])  # Exclude the '-' at the start
+            code_before.append(str(line)[1:])  # Exclude the '-' at the start
         if line.is_added or line.is_context:
-            after_code.append(str(line)[1:])  # Exclude the '+' at the start
+            code_after.append(str(line)[1:])  # Exclude the '+' at the start
 
     # Join the lines of code into strings
-    before_code = "".join(before_code)
-    after_code = "".join(after_code)
-    return before_code, after_code
+    code_before = "".join(code_before)
+    code_after = "".join(code_after)
+    return code_before, code_after
 
 
 def on_each_patch_file(patched_file):
@@ -29,7 +29,7 @@ def on_each_patch_file(patched_file):
     hunks = []
     for hunk in patched_file:
         # Parse the before and after code
-        before_code, after_code = parse_before_after_code(hunk)
+        code_before, code_after = parse_before_code_after(hunk)
         hunk_data = {
             "file": patched_file.path,
             "hunk": str(hunk),
@@ -40,8 +40,8 @@ def on_each_patch_file(patched_file):
             "target_lines": hunk.target_lines,
             "added_lines": [str(line)[1:] for line in hunk if line.is_added],
             "removed_lines": [str(line)[1:] for line in hunk if line.is_removed],
-            "before_code": before_code,
-            "after_code": after_code,
+            "code_before": code_before,
+            "code_after": code_after,
             "source_start": hunk.source_start,
             "source_length": hunk.source_length,
             "target_start": hunk.target_start,
@@ -102,6 +102,7 @@ def collect_repo_hunks(urls):
                 patch_meta, orient="index").reset_index()
             df_file = df_file.rename(columns={"index": "file"})
             df_file["url"] = url
+            df_file['message'] = repo.get_commit_message(url)
 
             # Append the DataFrames to the collection
             df_repo_patch = pd.concat(
