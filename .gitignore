@@ -2,7 +2,8 @@
 docs
 data/FixMe/
 FixMe.code-workspace
-semantic.ipynb
+data/FixMe-v1.db
+data/cvelistV5/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

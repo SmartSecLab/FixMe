@@ -113,7 +113,6 @@ def extract_cna(cvedict):
 def json2df(json_file):
     """Convert JSON data to a pandas DataFrame"""
     # Read JSON data from file
-    # print(f"Processing: {json_file}")
     df_cve = pd.DataFrame()
     if Path(json_file).is_file():
         with open(json_file, "r") as f:

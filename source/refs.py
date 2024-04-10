@@ -36,7 +36,7 @@ def find_urls(json_files):
         print("No JSON file found in the directory.")
 
     patch_links = {k: v for k, v in patch_links.items() if v}
-    print("#URL links:", len(patch_links))
+    print("#URL links: ", len(patch_links))
     return patch_links
 
 
@@ -74,14 +74,8 @@ def get_mod_cves(mod_files, data_dir):
     """Find the modified CVE JSON files after a git pull"""
     mod_cves = []
     if mod_files:
-        # print(f"Modified files after git pull: {mod_files}")
         mod_cves = [Path(data_dir, 'cvelistV5', file)
                     for file in mod_files if file.endswith(".json") and "CVE" in file]
         print(f"Modified/New CVEs: \n{mod_cves}")
         print(f"#modified CVEs: {len(mod_cves)}")
-
-        # TODO: remove these lines
-        with open(data_dir + "mod_cves.txt", "w") as f:
-            f.write("\n".join([str(cve) for cve in mod_cves]))
-
     return mod_cves

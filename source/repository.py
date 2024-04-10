@@ -76,8 +76,6 @@ def parse_commit_urls(df):
     """Parse the version control URLs"""
     if len(df) > 0:
         # if isinstance(df.references[0], list):
-        # print(f'Repository URL samples: \n{tabulate(df.head())}')
-
         print(f"Shape of repository after exploding: {df.shape}")
         df["vcs"], df["repo"], df["hash"] = zip(
             *df.references.apply(split_url))
