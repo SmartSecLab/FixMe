@@ -4,6 +4,7 @@ data/FixMe/
 FixMe.code-workspace
 data/FixMe-v1.db
 data/cvelistV5/
+Makefile
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
