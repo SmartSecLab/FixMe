@@ -1,4 +1,4 @@
-# FixMe: An Incremental Lightweight Method for Vulnerability Data Collection for Security Patch Prediction
+# FixMe: An Incremental Lightweight Method for Vulnerability Data Collection for Security Patches
 
 FixMe is a lightweight approach for the collection of code patches based on analyzing the commits of various version control systems.
 The practical framework is designed to generate patches across a wide array of programming languages. This open-source tool streamlines the process of gathering vulnerability records from the Common Vulnerabilities and Exposures (CVE) database through an incremental approach. By embracing an incremental methodology, we expedite the acquisition of data, ensuring the inclusion of newly identified vulnerabilities and their corresponding patch pairs. Our methodology involves extracting security issues, obtaining vulnerability-fixing commits, and retrieving relevant source code from various projects.
