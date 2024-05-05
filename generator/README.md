@@ -1,33 +1,50 @@
-# # Generative AI Use Case: Patches Generation
+# Generative AI Use Case: Security Patch Generation
 
-Welcome to the practical side of this course. In this lab you will do the dialogue summarization task using generative AI. You will explore how the input text affects the output of the model, and perform prompt engineering to direct it towards the task you need. By comparing zero shot, one shot, and few shot inferences, you will take the first step towards prompt engineering and see how it can enhance the generative output of Large Language Models.
+In this repository, we explore the application of generative AI for security patch generation. This process involves using large language models to generate patches for security vulnerabilities automatically. Below, we outline the key sections of this repository's README:
 
-# Table of Contents
+## Table of Contents
 
-- [1 - Set up Kernel and Required Dependencies]( # 1)
+- Introduction
+- Setup
+- Generating Patches
+- Without Prompt Engineering
+- With Instructional Prompts
+- Zero-Shot Inference
+- Prompt Template from CodeT5
+- One-Shot and Few-Shot Inference
+- Configuration Parameters
 
-- [2 - Summarize Dialogue without Prompt Engineering]( # 2)
+# Introduction
 
-- [3 - Summarize Dialogue with an Instruction Prompt]( # 3)
+This repository focuses on using generative AI techniques to automatically generate security patches. We provide methods for generating patches without prompt engineering as well as with different types of instructional prompts.
 
-- [3.1 - Zero Shot Inference with an Instruction Prompt]( # 3.1)
+# Setup
 
-- [3.2 - Zero Shot Inference with the Prompt Template from FLAN-T5]( # 3.2)
+Before generating patches, ensure that you have the necessary dependencies installed. This typically involves installing PyTorch, Hugging Face transformers, and datasets.
 
-- [4 - Summarize Dialogue with One Shot and Few Shot Inference]( # 4)
+# Generating Patches
 
-- [4.1 - One Shot Inference]( # 4.1)
+We offer various methods for generating patches using generative AI models. These methods include:
 
-- [4.2 - Few Shot Inference]( # 4.2)
+## Without Prompt Engineering
 
-- [5 - Generative Configuration Parameters for Inference]( # 5)
+Here, we generate patches without using any instructional prompts. The model generates patches based solely on the input text.
 
-# 1 - Set up Kernel and Required Dependencies
+## With Instructional Prompts
 
-First, check that the correct kernel is chosen.
+We explore the use of instructional prompts to guide the model in generating patches. This includes:
 
-You can click on that(top right of the screen) to see and check the details of the image, kernel, and instance type.
+- Zero-Shot Inference: Providing an instruction prompt to the model without additional training data.
 
-Now install the required packages to use PyTorch and Hugging Face transformers and datasets.
+- Prompt Template from CodeT5: Utilizing a predefined prompt template designed for security patch generation from CodeT5 model.
 
--
+## One-Shot and Few-Shot Inference
+
+In addition to zero-shot inference, we investigate the effectiveness of one-shot and few-shot inference for patch generation:
+
+- One Shot: Providing one example of a security vulnerability and its corresponding patch.
+- Few Shot: Offering a few examples of security vulnerabilities and their patches to guide the model.
+
+# Configuration Parameters
+
+We provide information on the configuration parameters used for inference, including model settings and prompt structures.
