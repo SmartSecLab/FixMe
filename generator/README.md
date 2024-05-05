@@ -14,6 +14,17 @@ In this repository, we explore the application of generative AI for security pat
 - One-Shot and Few-Shot Inference
 - Configuration Parameters
 
+# Structure
+
+| File            | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| evaluate.py     | Contains code for evaluating the performance of a model. |
+| finetune.py     | Script for fine-tuning a model.                          |
+| gen-config.yaml | YAML configuration file for generating configurations.   |
+| preprocess.py   | Code for preprocessing data.                             |
+| prompt.py       | Script for generating prompts.                           |
+| run.py          | Main script for running the model.                       |
+
 # Introduction
 
 This repository focuses on using generative AI techniques to automatically generate security patches. We provide methods for generating patches without prompt engineering as well as with different types of instructional prompts.
