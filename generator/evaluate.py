@@ -7,9 +7,23 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, GenerationConfig,
 
 # custom imports
 from generator.prompt import zero_prompt
+from generator.utility import get_logger
+
+# Setup logger
+log = get_logger()
 
 dash_line = '=' * 50
 rouge = evaluate.load('rouge')
+
+
+def get_trainable_model_pars(model):
+    trainable_model_params = 0
+    all_model_params = 0
+    for _, param in model.named_parameters():
+        all_model_params += param.numel()
+        if param.requires_grad:
+            trainable_model_params += param.numel()
+    return f"trainable model parameters: {trainable_model_params}\nall model parameters: {all_model_params}\npercentage of trainable model parameters: {100 * trainable_model_params / all_model_params:.2f}%"
 
 
 def show_original_instruct_summary(dataset, tokenizer, original_model, instruct_model, index=200):
@@ -28,12 +42,12 @@ def show_original_instruct_summary(dataset, tokenizer, original_model, instruct_
     instruct_model_text_output = tokenizer.decode(
         instruct_model_outputs[0], skip_special_tokens=True)
 
-    print(dash_line)
-    print(f'BASELINE PATCH:\n{human_baseline_summary}')
-    print(dash_line)
-    print(f'ORIGINAL MODEL:\n{original_model_text_output}')
-    print(dash_line)
-    print(f'INSTRUCT MODEL:\n{instruct_model_text_output}')
+    log.info(dash_line)
+    log.info(f'BASELINE PATCH:\n{human_baseline_summary}')
+    log.info(dash_line)
+    log.info(f'ORIGINAL MODEL:\n{original_model_text_output}')
+    log.info(dash_line)
+    log.info(f'INSTRUCT MODEL:\n{instruct_model_text_output}')
 
 
 def evaluate_rouge(results):
@@ -56,17 +70,17 @@ def evaluate_rouge(results):
         use_stemmer=True,
     )
 
-    print('ORIGINAL MODEL:')
-    print(original_model_results)
-    print('INSTRUCT MODEL:')
-    print(instruct_model_results)
+    log.info('ORIGINAL MODEL:')
+    log.info(original_model_results)
+    log.info('INSTRUCT MODEL:')
+    log.info(instruct_model_results)
 
-    print("Absolute percentage improvement of INSTRUCT MODEL over ORIGINAL MODEL")
+    log.info("Absolute percentage improvement of INSTRUCT MODEL over ORIGINAL MODEL")
 
     improvement = (np.array(list(instruct_model_results.values())) -
                    np.array(list(original_model_results.values())))
     for key, value in zip(instruct_model_results.keys(), improvement):
-        print(f'{key}: {value*100:.2f}%')
+        log.info(f'{key}: {value*100:.2f}%')
 
 
 def generate_summaries(original_model, instruct_model, tokenizer, dialogues, human_baseline_summaries, result_csv):
@@ -102,10 +116,10 @@ def generate_summaries(original_model, instruct_model, tokenizer, dialogues, hum
     df = pd.DataFrame(zipped_summaries, columns=[
         'human_baseline_summaries', 'original_model_summaries', 'instruct_model_summaries'])
     df.to_csv(result_csv, index=False)
-    print(dash_line)
-    print(f"Results of vul-fix-training saved to {result_csv}")
-    print(dash_line)
-    print("Sample of the results:")
-    print(df.head())
-    print(dash_line)
+    log.info(dash_line)
+    log.info(f"Results of vul-fix-training saved to {result_csv}")
+    log.info(dash_line)
+    log.info("Sample of the results:")
+    log.info(df.head())
+    log.info(dash_line)
     return df

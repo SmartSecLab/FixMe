@@ -18,11 +18,17 @@ import nltk
 import sqlite3
 from nltk.translate.bleu_score import sentence_bleu
 
+
 # custom functions
 from generator.preprocess import load_dataset_from_df
 from generator.finetune import fine_tune_model
 from generator.prompt import one_few_prompt, prompt_summary, zero_prompt
-from generator.evaluate import generate_summaries, evaluate_rouge, show_original_instruct_summary
+from generator.evaluate import generate_summaries, evaluate_rouge, show_original_instruct_summary, get_trainable_model_pars
+from generator.utility import get_logger
+
+
+# Setup logger
+log = get_logger()
 
 dash_line = '=' * 50
 
@@ -36,21 +42,21 @@ tokenizer = RobertaTokenizer.from_pretrained(model_name)
 # tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 # model = T5ForConditionalGeneration.from_pretrained(model_name)
-print('Model and Tokenizer loaded successfully!')
-print(dash_line)
+log.info('Model and Tokenizer loaded successfully!')
+log.info(dash_line)
 
 # # ============= Test the Model =============
-print('Test the Model')
+log.debug('Test the Model')
 text = "def greet(user): print(f'hello <extra_id_0>!')"
 # text = "def add(a, b): \n int sum= a + b \n return sum"
 input_ids = tokenizer(text, return_tensors="pt").input_ids
 
 # simply generate a single sequence
 generated_ids = model.generate(input_ids, max_length=8)
-print(
+log.debug(
     f'Model generated output: {tokenizer.decode(generated_ids[0],skip_special_tokens=True)}')
 # this prints "{user.username}"
-print(dash_line)
+log.info(dash_line)
 
 
 # Now it's time to explore how well the base LLM summarizes a dialogue without any prompt engineering. **Prompt engineering** is an act of a human changing the **prompt** (input) to improve the response for a given task.
@@ -58,9 +64,9 @@ example_indices = [3, 5]
 example_index_to_summarize = 2
 
 # ### 2.1 - without Prompt Engineering
-print(dash_line)
-print('Generate Gatch without Prompt Engineering')
-print(dash_line)
+log.info(dash_line)
+log.info('Generate Gatch without Prompt Engineering')
+log.info(dash_line)
 prompt_summary(dataset, tokenizer, model,
                gen_config=None,
                shot_type=None,
@@ -127,26 +133,17 @@ prompt_summary(dataset, tokenizer, model,
                )
 
 # # # Fine-Tune a Generative AI Model for Dialogue Summarization
-print('\n\n')
-print(dash_line)
-print('========== Fine-Tune a Codet5 Model for Patch Generation =======')
-print(dash_line)
+log.info('\n\n')
+log.info(dash_line)
+log.info('========== Fine-Tune a Codet5 Model for Patch Generation =======')
+log.info(dash_line)
 original_model = AutoModelForSeq2SeqLM.from_pretrained(
     model_name, torch_dtype=torch.bfloat16)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
+log.info('Model and Tokenizer loaded successfully!')
 
-
-def get_trainable_model_pars(model):
-    trainable_model_params = 0
-    all_model_params = 0
-    for _, param in model.named_parameters():
-        all_model_params += param.numel()
-        if param.requires_grad:
-            trainable_model_params += param.numel()
-    return f"trainable model parameters: {trainable_model_params}\nall model parameters: {all_model_params}\npercentage of trainable model parameters: {100 * trainable_model_params / all_model_params:.2f}%"
-
-
-print(get_trainable_model_pars(original_model))
+# ### 1.2 - Get the Trainable Parameters of the Model
+log.info(get_trainable_model_pars(original_model))
 
 # ### 1.3 - Test the Model with Zero Shot Inferencing
 prompt_summary(dataset, tokenizer, model,
@@ -157,19 +154,16 @@ prompt_summary(dataset, tokenizer, model,
                )
 
 # generate_summary(dataset, tokenizer, original_model)
-output_dir = f'models/vul-fix-training-{str(int(time.time()))}'
+output_dir = f'models/instruct-model-{str(int(time.time()))}'
 
 trainer = fine_tune_model(dataset, model, tokenizer, output_dir)
-print(dash_line)
-print('Fine-Tuning Completed!')
-print(f'Model saved to {output_dir}')
-print(dash_line)
+
 
 # ### 2.2 - Load the Trained Model
-print(dash_line)
-print('Load the Trained Model')
+log.info(dash_line)
+log.info('Load the Trained Model')
 instruct_model = AutoModelForSeq2SeqLM.from_pretrained(
-    f'models/instruct_model-{output_dir}', torch_dtype=torch.bfloat16)
+    output_dir, torch_dtype=torch.bfloat16)
 
 # ### 2.3 - Evaluate the Model Qualitatively (Human Evaluation)
 show_original_instruct_summary(

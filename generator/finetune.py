@@ -1,10 +1,27 @@
-
 # Fine-tune the model on the dataset
-
-# ## 2 - Perform Full Fine-Tuning
 import time
+import yaml
+import os
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, GenerationConfig, TrainingArguments, Trainer
 from transformers import RobertaTokenizer, T5ForConditionalGeneration
+
+# custom functions
+from generator.utility import get_logger
+
+
+# Setup logger
+log = get_logger()
+
+dash_line = '=' * 50
+
+
+def load_config(config_path):
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+
+config = load_config("generator/gen-config.yaml")
 
 
 def tokenize_function(example, tokenizer):
@@ -32,19 +49,27 @@ def fine_tune_model(dataset, model, tokenizer, output_dir):
     # tokenized_datasets = tokenized_datasets.filter(
     #     lambda example, index: index % 100 == 0, with_indices=True)
 
-    print(f"Shapes of the datasets:")
-    print(f"Training: {tokenized_datasets['train'].shape}")
-    print(f"Validation: {tokenized_datasets['validation'].shape}")
-    print(f"Test: {tokenized_datasets['test'].shape}")
-    print(tokenized_datasets)
+    log.info(f"Shapes of the datasets:")
+    log.info(f"Training: {tokenized_datasets['train'].shape}")
+    log.info(f"Validation: {tokenized_datasets['validation'].shape}")
+    log.info(f"Test: {tokenized_datasets['test'].shape}")
+    log.info(tokenized_datasets)
 
+    # training_args = TrainingArguments(
+    #     output_dir=output_dir,
+    #     learning_rate=1e-5,
+    #     num_train_epochs=2,
+    #     weight_decay=0.01,
+    #     logging_steps=1,
+    #     max_steps=1
+    # )
     training_args = TrainingArguments(
         output_dir=output_dir,
-        learning_rate=1e-5,
-        num_train_epochs=2,
-        weight_decay=0.01,
-        logging_steps=1,
-        max_steps=1
+        learning_rate=config['fine_tuning']['learning_rate'],
+        num_train_epochs=config['fine_tuning']['num_train_epochs'],
+        weight_decay=config['fine_tuning']['weight_decay'],
+        logging_steps=config['fine_tuning']['logging_steps'],
+        max_steps=config['fine_tuning']['max_steps']
     )
 
     trainer = Trainer(
@@ -57,6 +82,10 @@ def fine_tune_model(dataset, model, tokenizer, output_dir):
     trainer.train()
 
     # Save the trained model
-    trainer.save_model(f'models/instruct_model-{output_dir}')
+    trainer.save_model(output_dir)
+    log.info(dash_line)
+    log.info('Fine-Tuning Completed!')
+    log.info(f'Model saved to {output_dir}')
+    log.info(dash_line)
 
     return trainer

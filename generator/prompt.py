@@ -18,26 +18,33 @@ import nltk
 import sqlite3
 from nltk.translate.bleu_score import sentence_bleu
 
+# custom functions
+from generator.utility import get_logger
+
+
+# Setup logger
+log = get_logger()
+
 dash_line = '-' * 20
 
 
 def show_few_examples(dataset, num_examples=2):
     # Print the first few dialogues and summaries
-    print('Examples in the dataset:')
+    log.info('Examples in the dataset:')
     example_indices = [2, 4]
     # dash_line = '=' * 50
 
     for i, index in enumerate(example_indices):
-        print(dash_line)
-        print('Example ', i + 1)
-        print(dash_line)
-        print('Vulnerable code:')
-        print(dataset['test'][index]['dialogue'])
-        print(dash_line)
-        print('BASELINE PATCH:')
-        print(dataset['test'][index]['summary'])
-        print(dash_line)
-        print()
+        log.info(dash_line)
+        log.info('Example ', i + 1)
+        log.info(dash_line)
+        log.info('Vulnerable code:')
+        log.info(dataset['test'][index]['dialogue'])
+        log.info(dash_line)
+        log.info('BASELINE PATCH:')
+        log.info(dataset['test'][index]['summary'])
+        log.info(dash_line)
+        log.info()
 # -
 
 
@@ -130,9 +137,9 @@ def prompt_summary(dataset, tokenizer, model, gen_config=None,
     output = generate_summary(prompt, tokenizer, model, gen_config)
 
     dash_line = '-'.join('' for x in range(100))
-    print(dash_line)
-    print(f'INPUT PROMPT:\n{prompt}')
-    print(dash_line)
-    print(f'BASELINE PATCH:\n{summary}\n')
-    print(dash_line)
-    print(f'MODEL GENERATION - ZERO SHOT:\n{output}')
+    log.info(dash_line)
+    log.info(f'INPUT PROMPT:\n{prompt}')
+    log.info(dash_line)
+    log.info(f'BASELINE PATCH:\n{summary}\n')
+    log.info(dash_line)
+    log.info(f'MODEL GENERATION - ZERO SHOT:\n{output}')
