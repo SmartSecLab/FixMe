@@ -135,7 +135,7 @@ prompt_summary(dataset, tokenizer, model,
 # # # Fine-Tune a Generative AI Model for Dialogue Summarization
 log.info('\n\n')
 log.info(dash_line)
-log.info('========== Fine-Tune a Codet5 Model for Patch Generation =======')
+log.info('========== Fine-Tune the Codet5 Model for Patch Generation =======')
 log.info(dash_line)
 original_model = AutoModelForSeq2SeqLM.from_pretrained(
     model_name, torch_dtype=torch.bfloat16)

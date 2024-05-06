@@ -65,7 +65,7 @@ def fine_tune_model(dataset, model, tokenizer, output_dir):
     # )
     training_args = TrainingArguments(
         output_dir=output_dir,
-        learning_rate=config['fine_tuning']['learning_rate'],
+        learning_rate=float(config['fine_tuning']['learning_rate']),
         num_train_epochs=config['fine_tuning']['num_train_epochs'],
         weight_decay=config['fine_tuning']['weight_decay'],
         logging_steps=config['fine_tuning']['logging_steps'],

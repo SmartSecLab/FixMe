@@ -9,7 +9,8 @@ if not hasattr(logging, 'logger_configured'):
     logging.logger_configured = True
 
     # Create file handler which logs even debug messages
-    log_dir = Path('docs/logs')
+    # log_dir = Path('docs/logs')
+    log_dir = Path('logs')
     log_dir.mkdir(parents=True, exist_ok=True)
     log_filename = log_dir / f'run_{time.strftime("%Y%m%d%H%M%S")}.log'
 
