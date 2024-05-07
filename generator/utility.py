@@ -1,21 +1,20 @@
 import logging
-import os
 import time
 from pathlib import Path
 
 
 # Configure logger only once
-if not hasattr(logging, 'logger_configured'):
+if not hasattr(logging, "logger_configured"):
     logging.logger_configured = True
 
     # Create file handler which logs even debug messages
     # log_dir = Path('docs/logs')
-    log_dir = Path('logs')
+    log_dir = Path("logs")
     log_dir.mkdir(parents=True, exist_ok=True)
     log_filename = log_dir / f'run_{time.strftime("%Y%m%d%H%M%S")}.log'
 
     # Create a logger
-    logger = logging.getLogger('log')
+    logger = logging.getLogger("log")
     logger.setLevel(logging.DEBUG)
 
     # Create file handler which logs even debug messages
@@ -24,7 +23,8 @@ if not hasattr(logging, 'logger_configured'):
 
     # Create formatter and add it to the handler
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     fh.setFormatter(formatter)
 
     # Add the handler to the logger
