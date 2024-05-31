@@ -1,8 +1,0 @@
-original_model: Salesforce/codet5-base
-fine_tuning:
-  output_dir: models
-  learning_rate: 1e-5
-  num_train_epochs: 2
-  weight_decay: 0.01
-  logging_steps: 1
-  max_steps: 1

@@ -2,6 +2,7 @@
 
 import source.utility as utils
 import pandas as pd
+import uuid
 
 from source.utility import util
 import source.repository as repo
@@ -24,13 +25,14 @@ def parse_before_code_after(hunk):
     return code_before, code_after
 
 
-def on_each_patch_file(patched_file):
+def on_each_patch_file(patched_file, file_id):
     # Loop over each hunk in the patched file
     hunks = []
     for hunk in patched_file:
         # Parse the before and after code
         code_before, code_after = parse_before_code_after(hunk)
         hunk_data = {
+            "file_id": file_id,
             "file": patched_file.path,
             "hunk": str(hunk),
             "hunk_patch": str(hunk),
@@ -61,9 +63,11 @@ def parse_patchset(patch):
     patch_meta = {}
     patch_hunks = []
 
+    # 1. collect patch meta data
     for patched_file in patch:
         # all_attrs = dir(patched_file)
         file_attrs = {}
+        file_id = uuid.uuid4().hex[:16]
 
         for attr in patched_file.__dict__:
             # Exclude attrs that start with '__' (dunder/magic methods)
@@ -72,11 +76,15 @@ def parse_patchset(patch):
                 file_attrs[attr] = attr_value
                 pl = util.get_language_from_ext(patched_file.path)
                 file_attrs["programming_language"] = pl
+                # add fileID to the file_attrs
+                file_attrs["file_id"] = file_id
 
         patch_meta[patched_file.path] = file_attrs
-        # Loop over each hunk in the patched file
-        file_hunks = on_each_patch_file(patched_file)
+
+        # 2. collect patch hunks - Loop over each hunk in the patched file
+        file_hunks = on_each_patch_file(patched_file, file_id)
         patch_hunks.extend(file_hunks)
+
     return patch_meta, patch_hunks
 
 
